@@ -53,6 +53,6 @@ compileLatex :: Path Rel File -> Path Rel Dir -> IO ()
 compileLatex path out =
   let outDir = toFilePath out
       inFile = toFilePath path
-      command = "pdflatex" ++ " -output-directory " ++ outDir ++ " " ++ inFile
+      command = "pdflatex -halt-on-error -output-directory " ++ outDir ++ " " ++ inFile
       p = shell command
   in void $ createProcess p

@@ -27,6 +27,15 @@ peekContext e =
     [] -> Nothing
     xs -> Just $ head xs
 
+mergeContexts :: ContextStack -> ContextStack -> Environment -> ContextStack
+mergeContexts a b e =
+  let a' = reverse a
+      b' = reverse b
+      e' = reverse $ view ctxts e
+      drop' = drop $ length e'
+      result = reverse $ mappend a' (drop' b')
+  in result
+
 
 createDocuments :: DocTree -> [OutputDocument]
 createDocuments t =
@@ -47,6 +56,5 @@ evaluate (DocText body) e =
   }
 evaluate (DocTrees ts) e =
   let cross xs ys = join $ map (\x -> map (\y -> (x, y)) ys) xs
-      mergeContexts a = mappend (reverse (drop (length (view ctxts e)) (reverse a)))
-      mergeDocs (a, b) = Doc (view content a ++ view content b) (mergeContexts (view contextStack a) (view contextStack b))
+      mergeDocs (a, b) = Doc (view content a ++ view content b) (mergeContexts (view contextStack a) (view contextStack b) e)
   in foldl (\docs t -> (map mergeDocs $ cross docs (evaluate t e))) [Doc "" $ view ctxts e] ts
