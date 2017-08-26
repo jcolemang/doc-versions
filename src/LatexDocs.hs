@@ -19,6 +19,9 @@ import Path
 fname :: Path Rel File
 fname = [relfile|out.tex|]
 
+outFolder :: Path Rel Dir
+outFolder = [reldir|pdfs|]
+
 expandLatex :: Path Rel File -> Path Rel Dir -> IO ()
 expandLatex input dir = do
   c <- readFile $ toFilePath input
@@ -29,7 +32,15 @@ expandLatex input dir = do
              setupDocuments dir docs
              mapM_ (\d -> do
                        docFolder <- getDocumentFolder d
-                       compileLatex (dir </> docFolder </> fname) (dir </> docFolder)
+                       let fullpath = dir </> docFolder </> fname
+                       fullpdf <- setFileExtension ".pdf" fullpath
+                       newName <- parseRelFile $ intercalate "-" (reverse $ view contextStack d)
+                       newName' <- setFileExtension ".pdf" newName
+                       let pdf = outFolder </> newName'
+                       compileLatex fullpath (dir </> docFolder)
+                       copyFile (toFilePath fullpdf) (toFilePath pdf)
+                       putStrLn $ "From: " ++ show fullpdf
+                       putStrLn $ "To: " ++ show pdf
                    ) docs
            Left e -> do
              putStrLn "Could not parse"
@@ -41,13 +52,14 @@ getDocumentFolder doc =
   in parseRelDir $ intercalate "/" (reverse cs)
 
 setupDocuments :: Path a Dir -> [OutputDocument] -> IO ()
-setupDocuments fp =
+setupDocuments fp docs = do
+  createDirectoryIfMissing True (toFilePath outFolder)
   mapM_ (\doc -> do
             df <- getDocumentFolder doc
             let loc = fp </> df
             createDirectoryIfMissing True (toFilePath loc)
             writeFile (toFilePath $ loc </> fname) $ view content doc
-        )
+        ) docs
 
 compileLatex :: Path Rel File -> Path Rel Dir -> IO ()
 compileLatex path out =
@@ -55,4 +67,7 @@ compileLatex path out =
       inFile = toFilePath path
       command = "pdflatex -halt-on-error -output-directory " ++ outDir ++ " " ++ inFile
       p = shell command
-  in void $ createProcess p
+  in do
+    (_, _, _, h) <- createProcess p
+    _ <- waitForProcess h
+    return ()
