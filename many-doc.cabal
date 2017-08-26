@@ -22,6 +22,8 @@ executable many-doc
                      , transformers
                      , process
                      , directory
+                     , path
+                     , exceptions
   other-modules:       Parser
                      , ParseTree
                      , Eval

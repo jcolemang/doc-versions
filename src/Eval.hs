@@ -47,6 +47,6 @@ evaluate (DocText body) e =
   }
 evaluate (DocTrees ts) e =
   let cross xs ys = join $ map (\x -> map (\y -> (x, y)) ys) xs
-      mergeContexts a = mappend (drop (length (view ctxts e)) a)
+      mergeContexts a = mappend (reverse (drop (length (view ctxts e)) (reverse a)))
       mergeDocs (a, b) = Doc (view content a ++ view content b) (mergeContexts (view contextStack a) (view contextStack b))
   in foldl (\docs t -> (map mergeDocs $ cross docs (evaluate t e))) [Doc "" $ view ctxts e] ts

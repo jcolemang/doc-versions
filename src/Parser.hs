@@ -9,7 +9,7 @@ import Text.ParserCombinators.Parsec
 
 white :: Parser ()
 white =
-  void $ many space <|> many newline <|> many tab
+  void $ many space <|> many tab
 
 specialCharacters :: String
 specialCharacters =
@@ -67,4 +67,4 @@ parseIfBlockClose =
 
 parsePeek :: Parser DocStatement
 parsePeek =
-  const ContextPeek <$> (spaces >> string "Context" <* spaces)
+  const ContextPeek <$> (white >> string "Context" <* white)
